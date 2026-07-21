@@ -1,0 +1,21 @@
+# Binários compilados
+server
+*.exe
+*.out
+
+# Ambiente local (nunca subir para o repositório)
+.env
+
+# Go build cache
+/tmp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
+
+# Docker
+.dockerignore
