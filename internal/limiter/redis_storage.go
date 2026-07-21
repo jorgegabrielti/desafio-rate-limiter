@@ -9,7 +9,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// RedisStorage implementa a estratégia de armazenamento no Redis utilizando Scripting Lua atômico.
 type RedisStorage struct {
 	client *redis.Client
 }
@@ -20,7 +19,6 @@ func NewRedisStorage(client *redis.Client) *RedisStorage {
 	}
 }
 
-// Script Lua executado atomicamente no Redis para evitar condições de corrida (Race Conditions)
 var rateLimitLuaScript = redis.NewScript(`
 	local blocked_key = KEYS[1]
 	local rate_key = KEYS[2]
@@ -28,18 +26,15 @@ var rateLimitLuaScript = redis.NewScript(`
 	local window_ttl = tonumber(ARGV[2])
 	local block_ttl = tonumber(ARGV[3])
 
-	-- 1. Verifica se a chave está bloqueada
 	if redis.call("EXISTS", blocked_key) == 1 then
 		return 0
 	end
 
-	-- 2. Incrementa o contador na janela atual
 	local current = redis.call("INCR", rate_key)
 	if current == 1 then
 		redis.call("EXPIRE", rate_key, window_ttl)
 	end
 
-	-- 3. Se ultrapassar o limite, define o bloqueio e remove o contador
 	if current > limit then
 		redis.call("SET", blocked_key, "1", "EX", block_ttl)
 		redis.call("DEL", rate_key)
@@ -76,7 +71,7 @@ func (r *RedisStorage) Allow(ctx context.Context, key string, limit int, window 
 	keys := []string{blockedKey, rateKey}
 	args := []interface{}{
 		strconv.Itoa(limit),
-		strconv.Itoa(windowTTLSec + 1), // TTL da janela com margem de 1s
+		strconv.Itoa(windowTTLSec + 1),
 		strconv.Itoa(blockTTLSec),
 	}
 

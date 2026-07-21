@@ -22,9 +22,7 @@ func NewRateLimiter(storage LimiterStorage, cfg *config.Config) *RateLimiter {
 	}
 }
 
-// AllowRequest avalia a requisição HTTP aplicando a Regra de Ouro (Precedência: Token > IP)
 func (rl *RateLimiter) AllowRequest(ctx context.Context, r *http.Request) (bool, error) {
-	// 1. Regra de Ouro: O token no header API_KEY deve se sobrepor às regras de IP
 	token := strings.TrimSpace(r.Header.Get("API_KEY"))
 
 	if token != "" {
@@ -42,7 +40,6 @@ func (rl *RateLimiter) AllowRequest(ctx context.Context, r *http.Request) (bool,
 		return rl.storage.Allow(ctx, key, limit, 1*time.Second, blockDuration)
 	}
 
-	// 2. Fallback: Limitação baseada no IP do cliente
 	ip := getClientIP(r)
 	key := "ip:" + ip
 	limit := rl.cfg.IPMaxRequests
@@ -51,7 +48,6 @@ func (rl *RateLimiter) AllowRequest(ctx context.Context, r *http.Request) (bool,
 	return rl.storage.Allow(ctx, key, limit, 1*time.Second, blockDuration)
 }
 
-// Extrai o IP real da requisição considerando proxies ou RemoteAddr
 func getClientIP(r *http.Request) string {
 	forwarded := r.Header.Get("X-Forwarded-For")
 	if forwarded != "" {
