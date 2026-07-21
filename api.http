@@ -1,85 +1,27 @@
-# ============================================================
-#  🛡️  Rate Limiter — Guia de Testes com REST Client (VS Code)
-#
-#  COMO USAR:
-#    1. Clique em "Send Request" acima de cada bloco (###).
-#    2. Observe o Status Code na aba de resposta à direita.
-#    3. Para cenários com múltiplas requisições, envie o mesmo
-#       bloco rapidamente várias vezes seguidas.
-#
-#  CONFIGURAÇÃO ATUAL (.env / docker-compose.yaml):
-#    IP_MAX_REQUESTS  = 5  req/s  → bloqueia na 6ª
-#    TOKEN_MAX_REQUEST= 10 req/s  → bloqueia na 11ª
-#    BLOCK_DURATION   = 300s (5 minutos)
-# ============================================================
-
 @host = http://localhost:8080
 
-# ===========================================================
-# CENÁRIO 1 — Requisição normal por IP (sem token)
-#  ✅ Envie até 5x → HTTP 200
-#  🚫 Na 6ª envio   → HTTP 429 (Too Many Requests)
-# ===========================================================
-
-### [IP] Req #1 — Envie este bloco 6x seguidas (clique 6x em Send Request)
+### [IP] Req — Envie 6x seguidas (bloqueia na 6ª)
 GET {{host}}/
 Accept: application/json
 
 ###
 
-# ===========================================================
-# CENÁRIO 2 — Requisição com Token (API_KEY)
-#  ✅ Envie até 10x → HTTP 200  (limite maior que o IP!)
-#  🚫 Na 11ª envio  → HTTP 429
-#  💡 Note que o Token ignora completamente o bloqueio do IP.
-# ===========================================================
-
-### [TOKEN] Req — Envie este bloco 11x seguidas
+### [TOKEN] Req — Envie 11x seguidas (bloqueia na 11ª)
 GET {{host}}/
 API_KEY: token-secreto-123
 Accept: application/json
 
 ###
 
-# ===========================================================
-# CENÁRIO 3 — Regra de Ouro (Token > IP)
-#  Simula: IP já bloqueado, mas Token diferente passa livre.
-#  1. Primeiro esgote o IP com o Cenário 1.
-#  2. Tente o bloco abaixo com token — deverá retornar 200!
-# ===========================================================
-
-### [OURO] Após bloquear o IP, Token diferente ainda funciona
+### [OURO] Com IP bloqueado, Token ainda passa (200)
 GET {{host}}/
 API_KEY: outro-token-vip
 Accept: application/json
 
 ###
 
-# ===========================================================
-# CENÁRIO 4 — Valida a mensagem exata exigida no enunciado
-#  (Esgote o IP primeiro, depois envie este bloco)
-#  Body esperado: "you have reached the maximum number of
-#  requests or actions allowed within a certain time frame"
-# ===========================================================
-
-### [429] Confirmação da mensagem de bloqueio
-GET {{host}}/
-Accept: text/plain
-
-###
-
-# ===========================================================
-# UTILITÁRIOS
-# ===========================================================
-
-### Health check — /ping (nunca bloqueado se IP ok)
+### [PING] Health check
 GET {{host}}/ping
-Accept: application/json
-
-###
-
-### Rota raiz — resposta JSON padrão
-GET {{host}}/
 Accept: application/json
 
 ###
