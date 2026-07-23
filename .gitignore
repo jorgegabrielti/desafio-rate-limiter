@@ -1,5 +1,5 @@
 # Binários compilados
-server
+/server
 *.exe
 *.out
 
